@@ -1,275 +1,339 @@
-import { users, cars, salesMetrics, salesStatistics, type User, type InsertUser, type Car, type InsertCar, type SalesMetrics, type InsertSalesMetrics, type SalesStatistics, type InsertSalesStatistics } from "@shared/schema";
+import { 
+  users, 
+  vehicles, 
+  drivers, 
+  vehicleAssignments, 
+  maintenanceRecords, 
+  fuelRecords,
+  type User, 
+  type InsertUser, 
+  type Vehicle, 
+  type InsertVehicle, 
+  type Driver, 
+  type InsertDriver,
+  type VehicleAssignment,
+  type InsertVehicleAssignment,
+  type MaintenanceRecord,
+  type InsertMaintenanceRecord,
+  type FuelRecord,
+  type InsertFuelRecord
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 export interface IStorage {
-  // User methods
+  // Auth methods
+  authenticateUser(username: string, password: string): Promise<User | null>;
+  createUser(user: InsertUser): Promise<User>;
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined>;
   
-  // Car methods
-  getCar(id: number): Promise<Car | undefined>;
-  getAllCars(): Promise<Car[]>;
-  getAvailableCars(): Promise<Car[]>;
-  createCar(car: InsertCar): Promise<Car>;
-  updateCar(id: number, updates: Partial<InsertCar>): Promise<Car | undefined>;
-  deleteCar(id: number): Promise<boolean>;
+  // Vehicle methods
+  getVehicle(id: number): Promise<Vehicle | undefined>;
+  getAllVehicles(): Promise<Vehicle[]>;
+  getAvailableVehicles(): Promise<Vehicle[]>;
+  getVehiclesByDriver(driverId: number): Promise<Vehicle[]>;
+  createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  updateVehicle(id: number, updates: Partial<InsertVehicle>): Promise<Vehicle | undefined>;
+  deleteVehicle(id: number): Promise<boolean>;
   
-  // Sales metrics methods
-  getCurrentSalesMetrics(): Promise<SalesMetrics | undefined>;
-  createSalesMetrics(metrics: InsertSalesMetrics): Promise<SalesMetrics>;
+  // Driver methods
+  getDriver(id: number): Promise<Driver | undefined>;
+  getAllDrivers(): Promise<Driver[]>;
+  getAvailableDrivers(): Promise<Driver[]>;
+  createDriver(driver: InsertDriver): Promise<Driver>;
+  updateDriver(id: number, updates: Partial<InsertDriver>): Promise<Driver | undefined>;
+  deleteDriver(id: number): Promise<boolean>;
   
-  // Sales statistics methods
-  getAllSalesStatistics(): Promise<SalesStatistics[]>;
-  createSalesStatistics(stats: InsertSalesStatistics): Promise<SalesStatistics>;
+  // Vehicle assignment methods
+  assignVehicleToDriver(assignment: InsertVehicleAssignment): Promise<VehicleAssignment>;
+  unassignVehicle(vehicleId: number, reason?: string): Promise<boolean>;
+  getVehicleAssignments(): Promise<VehicleAssignment[]>;
+  getActiveAssignments(): Promise<VehicleAssignment[]>;
+  
+  // Maintenance methods
+  addMaintenanceRecord(record: InsertMaintenanceRecord): Promise<MaintenanceRecord>;
+  getMaintenanceRecords(vehicleId?: number): Promise<MaintenanceRecord[]>;
+  updateMaintenanceRecord(id: number, updates: Partial<InsertMaintenanceRecord>): Promise<MaintenanceRecord | undefined>;
+  
+  // Fuel tracking methods
+  addFuelRecord(record: InsertFuelRecord): Promise<FuelRecord>;
+  getFuelRecords(vehicleId?: number): Promise<FuelRecord[]>;
+  updateFuelRecord(id: number, updates: Partial<InsertFuelRecord>): Promise<FuelRecord | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private cars: Map<number, Car>;
-  private salesMetrics: Map<number, SalesMetrics>;
-  private salesStatistics: Map<number, SalesStatistics>;
-  private currentUserId: number;
-  private currentCarId: number;
-  private currentMetricsId: number;
-  private currentStatsId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.cars = new Map();
-    this.salesMetrics = new Map();
-    this.salesStatistics = new Map();
-    this.currentUserId = 1;
-    this.currentCarId = 1;
-    this.currentMetricsId = 1;
-    this.currentStatsId = 1;
+export class DatabaseStorage implements IStorage {
+  // Auth methods
+  async authenticateUser(username: string, password: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    if (!user) return null;
     
-    this.initializeData();
-  }
-
-  private initializeData() {
-    // Initialize default user
-    const defaultUser: User = {
-      id: this.currentUserId++,
-      username: "admin",
-      password: "password123",
-      email: "dianne.russell@focar.com",
-      name: "Dianne Russell",
-      role: "admin"
-    };
-    this.users.set(defaultUser.id, defaultUser);
-
-    // Initialize cars
-    const bmwCars: Car[] = [
-      {
-        id: this.currentCarId++,
-        make: "BMW",
-        model: "XM 2024 Edition",
-        year: 2024,
-        price: "93899.00",
-        type: "hybrid",
-        horsepower: 653,
-        kilowatts: 480,
-        seats: 4,
-        imageUrl: "https://images.unsplash.com/photo-1555215695-3004980ad54e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        thumbnails: [
-          "https://pixabay.com/get/g771a35dc479351b6745067e3048cc01930027686898b69d70e4a12db73b6759fe27dbade536eec1f508b90c78a537418e8d92c2d33d6697e2d675e2cd2530376_1280.jpg",
-          "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150",
-          "https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150"
-        ],
-        features: ["Hybrid Car", "Smart AC", "Smart Tracking", "Smart Control", "Advanced Gear"],
-        description: "High-performance luxury SUV with advanced hybrid technology, featuring cutting-edge infotainment system and premium interior finishes.",
-        isAvailable: true,
-        bookingNumber: "78845",
-        customerName: "Brooklyn Simmons",
-        customerEmail: "debra.holt@example.com",
-        orderDate: new Date("2024-01-26"),
-        status: "sold"
-      },
-      {
-        id: this.currentCarId++,
-        make: "BMW",
-        model: "i7 M70 xDrive",
-        year: 2024,
-        price: "93899.00",
-        type: "electric",
-        horsepower: 653,
-        kilowatts: 480,
-        seats: 4,
-        imageUrl: "https://images.unsplash.com/photo-1563720223-b6267bd740c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        thumbnails: [],
-        features: ["Electric Car", "Smart AC", "Smart Tracking", "Smart Control"],
-        description: "Flagship electric sedan with unparalleled luxury and cutting-edge electric drivetrain technology.",
-        isAvailable: true,
-        status: "available"
-      },
-      {
-        id: this.currentCarId++,
-        make: "BMW",
-        model: "i4 M50 xDrive",
-        year: 2024,
-        price: "75299.00",
-        type: "hybrid",
-        horsepower: 536,
-        kilowatts: 400,
-        seats: 4,
-        imageUrl: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        thumbnails: [],
-        features: ["Hybrid Car", "Smart AC", "Smart Tracking", "Smart Control"],
-        description: "Performance electric sedan combining sporty driving dynamics with zero-emission technology.",
-        isAvailable: true,
-        status: "available"
-      },
-      {
-        id: this.currentCarId++,
-        make: "BMW",
-        model: "X5 M Competition",
-        year: 2024,
-        price: "108900.00",
-        type: "gasoline",
-        horsepower: 617,
-        kilowatts: null,
-        seats: 7,
-        imageUrl: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        thumbnails: [],
-        features: ["Gasoline", "Climate Control", "Connected Drive", "Active Safety"],
-        description: "Ultimate performance SUV with M-tuned engine and track-ready capabilities.",
-        isAvailable: true,
-        status: "available"
-      },
-      {
-        id: this.currentCarId++,
-        make: "BMW",
-        model: "M3 Competition",
-        year: 2024,
-        price: "78800.00",
-        type: "gasoline",
-        horsepower: 503,
-        kilowatts: null,
-        seats: 4,
-        imageUrl: "https://pixabay.com/get/g55bf8773c5d6556ef0787c0b0c45209a23d845446fd78bb5c78f1968894380e9cd62d3e43effa1f2f746e2b288f6761098d711e6c92fdfb0517fb32a608c3b5b_1280.jpg",
-        thumbnails: [],
-        features: ["M Performance", "Track Mode", "Adaptive M", "RWD"],
-        description: "Pure driving machine with race-bred M performance and precision handling.",
-        isAvailable: true,
-        status: "available"
-      },
-      {
-        id: this.currentCarId++,
-        make: "BMW",
-        model: "iX xDrive50",
-        year: 2024,
-        price: "87100.00",
-        type: "electric",
-        horsepower: 516,
-        kilowatts: 385,
-        seats: 5,
-        imageUrl: "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        thumbnails: [],
-        features: ["Electric", "AI Assistant", "Fast Charging", "Digital Key"],
-        description: "Revolutionary electric SUV with sustainable luxury and innovative technology integration.",
-        isAvailable: true,
-        status: "available"
-      }
-    ];
-
-    bmwCars.forEach(car => this.cars.set(car.id, car));
-
-    // Initialize sales metrics
-    const currentMetrics: SalesMetrics = {
-      id: this.currentMetricsId++,
-      totalProfit: "93247.38",
-      totalSales: "849752.01",
-      profitGrowth: "67.00",
-      salesGrowth: "8.00",
-      period: "current",
-      createdAt: new Date()
-    };
-    this.salesMetrics.set(currentMetrics.id, currentMetrics);
-
-    // Initialize sales statistics
-    const statsData: SalesStatistics[] = [
-      { id: this.currentStatsId++, country: "US", percentage: "36.10", sales: "304562.15" },
-      { id: this.currentStatsId++, country: "UK", percentage: "28.70", sales: "243946.83" },
-      { id: this.currentStatsId++, country: "UAE", percentage: "27.40", sales: "232832.05" },
-      { id: this.currentStatsId++, country: "Australia", percentage: "21.50", sales: "182696.68" },
-      { id: this.currentStatsId++, country: "Germany", percentage: "18.70", sales: "158899.62" }
-    ];
-
-    statsData.forEach(stat => this.salesStatistics.set(stat.id, stat));
-  }
-
-  // User methods
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+    const isValid = await bcrypt.compare(password, user.password);
+    return isValid ? user : null;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    const [user] = await db
+      .insert(users)
+      .values({ ...insertUser, password: hashedPassword })
+      .returning();
     return user;
   }
 
-  // Car methods
-  async getCar(id: number): Promise<Car | undefined> {
-    return this.cars.get(id);
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
-  async getAllCars(): Promise<Car[]> {
-    return Array.from(this.cars.values());
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
-  async getAvailableCars(): Promise<Car[]> {
-    return Array.from(this.cars.values()).filter(car => car.isAvailable);
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 
-  async createCar(insertCar: InsertCar): Promise<Car> {
-    const id = this.currentCarId++;
-    const car: Car = { ...insertCar, id };
-    this.cars.set(id, car);
-    return car;
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined> {
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+    }
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
-  async updateCar(id: number, updates: Partial<InsertCar>): Promise<Car | undefined> {
-    const car = this.cars.get(id);
-    if (!car) return undefined;
+  // Vehicle methods
+  async getVehicle(id: number): Promise<Vehicle | undefined> {
+    const [vehicle] = await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.id, id));
+    return vehicle;
+  }
+
+  async getAllVehicles(): Promise<Vehicle[]> {
+    return await db.select().from(vehicles).where(eq(vehicles.isActive, true));
+  }
+
+  async getAvailableVehicles(): Promise<Vehicle[]> {
+    return await db
+      .select()
+      .from(vehicles)
+      .where(and(eq(vehicles.isActive, true), eq(vehicles.status, "available")));
+  }
+
+  async getVehiclesByDriver(driverId: number): Promise<Vehicle[]> {
+    return await db
+      .select()
+      .from(vehicles)
+      .where(and(eq(vehicles.assignedDriverId, driverId), eq(vehicles.isActive, true)));
+  }
+
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const [newVehicle] = await db
+      .insert(vehicles)
+      .values(vehicle)
+      .returning();
+    return newVehicle;
+  }
+
+  async updateVehicle(id: number, updates: Partial<InsertVehicle>): Promise<Vehicle | undefined> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set(updates)
+      .where(eq(vehicles.id, id))
+      .returning();
+    return vehicle;
+  }
+
+  async deleteVehicle(id: number): Promise<boolean> {
+    const [vehicle] = await db
+      .update(vehicles)
+      .set({ isActive: false })
+      .where(eq(vehicles.id, id))
+      .returning();
+    return !!vehicle;
+  }
+
+  // Driver methods
+  async getDriver(id: number): Promise<Driver | undefined> {
+    const [driver] = await db.select().from(drivers).where(eq(drivers.id, id));
+    return driver;
+  }
+
+  async getAllDrivers(): Promise<Driver[]> {
+    return await db.select().from(drivers);
+  }
+
+  async getAvailableDrivers(): Promise<Driver[]> {
+    return await db
+      .select()
+      .from(drivers)
+      .where(eq(drivers.status, "active"));
+  }
+
+  async createDriver(driver: InsertDriver): Promise<Driver> {
+    const [newDriver] = await db
+      .insert(drivers)
+      .values(driver)
+      .returning();
+    return newDriver;
+  }
+
+  async updateDriver(id: number, updates: Partial<InsertDriver>): Promise<Driver | undefined> {
+    const [driver] = await db
+      .update(drivers)
+      .set(updates)
+      .where(eq(drivers.id, id))
+      .returning();
+    return driver;
+  }
+
+  async deleteDriver(id: number): Promise<boolean> {
+    const [driver] = await db
+      .update(drivers)
+      .set({ status: "inactive" })
+      .where(eq(drivers.id, id))
+      .returning();
+    return !!driver;
+  }
+
+  // Vehicle assignment methods
+  async assignVehicleToDriver(assignment: InsertVehicleAssignment): Promise<VehicleAssignment> {
+    // First, unassign any existing assignment for this vehicle
+    await db
+      .update(vehicleAssignments)
+      .set({ isActive: false, unassignedDate: new Date() })
+      .where(and(eq(vehicleAssignments.vehicleId, assignment.vehicleId), eq(vehicleAssignments.isActive, true)));
+
+    // Update vehicle status and assigned driver
+    await db
+      .update(vehicles)
+      .set({ 
+        assignedDriverId: assignment.driverId, 
+        status: "assigned" 
+      })
+      .where(eq(vehicles.id, assignment.vehicleId));
+
+    // Create new assignment record
+    const [newAssignment] = await db
+      .insert(vehicleAssignments)
+      .values(assignment)
+      .returning();
     
-    const updatedCar = { ...car, ...updates };
-    this.cars.set(id, updatedCar);
-    return updatedCar;
+    return newAssignment;
   }
 
-  async deleteCar(id: number): Promise<boolean> {
-    return this.cars.delete(id);
+  async unassignVehicle(vehicleId: number, reason?: string): Promise<boolean> {
+    // Update assignment record
+    await db
+      .update(vehicleAssignments)
+      .set({ 
+        isActive: false, 
+        unassignedDate: new Date(),
+        reason: reason || "Unassigned" 
+      })
+      .where(and(eq(vehicleAssignments.vehicleId, vehicleId), eq(vehicleAssignments.isActive, true)));
+
+    // Update vehicle status
+    const [vehicle] = await db
+      .update(vehicles)
+      .set({ 
+        assignedDriverId: null, 
+        status: "available" 
+      })
+      .where(eq(vehicles.id, vehicleId))
+      .returning();
+
+    return !!vehicle;
   }
 
-  // Sales metrics methods
-  async getCurrentSalesMetrics(): Promise<SalesMetrics | undefined> {
-    return Array.from(this.salesMetrics.values()).find(metrics => metrics.period === "current");
+  async getVehicleAssignments(): Promise<VehicleAssignment[]> {
+    return await db
+      .select()
+      .from(vehicleAssignments)
+      .orderBy(desc(vehicleAssignments.assignedDate));
   }
 
-  async createSalesMetrics(insertMetrics: InsertSalesMetrics): Promise<SalesMetrics> {
-    const id = this.currentMetricsId++;
-    const metrics: SalesMetrics = { ...insertMetrics, id, createdAt: new Date() };
-    this.salesMetrics.set(id, metrics);
-    return metrics;
+  async getActiveAssignments(): Promise<VehicleAssignment[]> {
+    return await db
+      .select()
+      .from(vehicleAssignments)
+      .where(eq(vehicleAssignments.isActive, true))
+      .orderBy(desc(vehicleAssignments.assignedDate));
   }
 
-  // Sales statistics methods
-  async getAllSalesStatistics(): Promise<SalesStatistics[]> {
-    return Array.from(this.salesStatistics.values());
+  // Maintenance methods
+  async addMaintenanceRecord(record: InsertMaintenanceRecord): Promise<MaintenanceRecord> {
+    const [newRecord] = await db
+      .insert(maintenanceRecords)
+      .values(record)
+      .returning();
+    return newRecord;
   }
 
-  async createSalesStatistics(insertStats: InsertSalesStatistics): Promise<SalesStatistics> {
-    const id = this.currentStatsId++;
-    const stats: SalesStatistics = { ...insertStats, id };
-    this.salesStatistics.set(id, stats);
-    return stats;
+  async getMaintenanceRecords(vehicleId?: number): Promise<MaintenanceRecord[]> {
+    if (vehicleId) {
+      return await db
+        .select()
+        .from(maintenanceRecords)
+        .where(eq(maintenanceRecords.vehicleId, vehicleId))
+        .orderBy(desc(maintenanceRecords.serviceDate));
+    }
+    return await db
+      .select()
+      .from(maintenanceRecords)
+      .orderBy(desc(maintenanceRecords.serviceDate));
+  }
+
+  async updateMaintenanceRecord(id: number, updates: Partial<InsertMaintenanceRecord>): Promise<MaintenanceRecord | undefined> {
+    const [record] = await db
+      .update(maintenanceRecords)
+      .set(updates)
+      .where(eq(maintenanceRecords.id, id))
+      .returning();
+    return record;
+  }
+
+  // Fuel tracking methods
+  async addFuelRecord(record: InsertFuelRecord): Promise<FuelRecord> {
+    const [newRecord] = await db
+      .insert(fuelRecords)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  async getFuelRecords(vehicleId?: number): Promise<FuelRecord[]> {
+    if (vehicleId) {
+      return await db
+        .select()
+        .from(fuelRecords)
+        .where(eq(fuelRecords.vehicleId, vehicleId))
+        .orderBy(desc(fuelRecords.fuelDate));
+    }
+    return await db
+      .select()
+      .from(fuelRecords)
+      .orderBy(desc(fuelRecords.fuelDate));
+  }
+
+  async updateFuelRecord(id: number, updates: Partial<InsertFuelRecord>): Promise<FuelRecord | undefined> {
+    const [record] = await db
+      .update(fuelRecords)
+      .set(updates)
+      .where(eq(fuelRecords.id, id))
+      .returning();
+    return record;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
