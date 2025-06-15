@@ -49,21 +49,19 @@ export default function Sidebar() {
             
             return (
               <li key={item.href}>
-                <Link href={item.href}>
-                  <a className={cn(
-                    "flex items-center justify-between px-4 py-3 rounded-xl transition-colors",
-                    isActive
-                      ? "bg-purple-primary text-white"
-                      : "text-gray-400 hover:text-white hover:bg-dark-elevated"
-                  )}>
-                    <div className="flex items-center space-x-3">
-                      <Icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.hasNotification && (
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    )}
-                  </a>
+                <Link href={item.href} className={cn(
+                  "flex items-center justify-between px-4 py-3 rounded-xl transition-colors",
+                  isActive
+                    ? "bg-purple-primary text-white"
+                    : "text-gray-400 hover:text-white hover:bg-dark-elevated"
+                )}>
+                  <div className="flex items-center space-x-3">
+                    <Icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.hasNotification && (
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  )}
                 </Link>
               </li>
             );
@@ -78,16 +76,14 @@ export default function Sidebar() {
               
               return (
                 <li key={item.href}>
-                  <Link href={item.href}>
-                    <a className={cn(
-                      "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
-                      isActive
-                        ? "bg-purple-primary text-white"
-                        : "text-gray-400 hover:text-white hover:bg-dark-elevated"
-                    )}>
-                      <Icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </a>
+                  <Link href={item.href} className={cn(
+                    "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
+                    isActive
+                      ? "bg-purple-primary text-white"
+                      : "text-gray-400 hover:text-white hover:bg-dark-elevated"
+                  )}>
+                    <Icon className="w-5 h-5" />
+                    <span>{item.label}</span>
                   </Link>
                 </li>
               );
