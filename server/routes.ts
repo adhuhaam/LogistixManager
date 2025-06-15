@@ -1,138 +1,371 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCarSchema, insertSalesMetricsSchema, insertSalesStatisticsSchema } from "@shared/schema";
+import { 
+  insertUserSchema, 
+  insertVehicleSchema, 
+  insertDriverSchema, 
+  insertVehicleAssignmentSchema,
+  insertMaintenanceRecordSchema,
+  insertFuelRecordSchema,
+  loginSchema
+} from "@shared/schema";
+import { fromZodError } from "zod-validation-error";
+import session from "express-session";
+
+// Extend session types
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+    userRole: string;
+  }
+}
+
+// Simple session-based authentication middleware
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
+};
+
+const requireAdmin = (req: any, res: any, next: any) => {
+  if (!req.session?.userId || req.session?.userRole !== "admin") {
+    return res.status(403).json({ message: "Admin access required" });
+  }
+  next();
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Cars routes
-  app.get("/api/cars", async (req, res) => {
-    try {
-      const cars = await storage.getAllCars();
-      res.json(cars);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch cars" });
-    }
-  });
+  // Session configuration
+  app.use(session({
+    secret: 'focar-vehicle-management-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  }));
 
-  app.get("/api/cars/available", async (req, res) => {
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
     try {
-      const cars = await storage.getAvailableCars();
-      res.json(cars);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch available cars" });
-    }
-  });
-
-  app.get("/api/cars/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const car = await storage.getCar(id);
-      if (!car) {
-        return res.status(404).json({ error: "Car not found" });
-      }
-      res.json(car);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch car" });
-    }
-  });
-
-  app.post("/api/cars", async (req, res) => {
-    try {
-      const result = insertCarSchema.safeParse(req.body);
+      const result = loginSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: "Invalid car data", details: result.error });
+        return res.status(400).json({ error: "Invalid login data", details: fromZodError(result.error) });
       }
-      const car = await storage.createCar(result.data);
-      res.status(201).json(car);
+
+      const user = await storage.authenticateUser(result.data.username, result.data.password);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
+      
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role 
+      });
     } catch (error) {
-      res.status(500).json({ error: "Failed to create car" });
+      res.status(500).json({ error: "Login failed" });
     }
   });
 
-  app.put("/api/cars/:id", async (req, res) => {
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/user", requireAuth, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const result = insertCarSchema.partial().safeParse(req.body);
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role 
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  // User management routes (admin only)
+  app.get("/api/users", requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users.map(u => ({ 
+        id: u.id, 
+        username: u.username, 
+        name: u.name, 
+        email: u.email, 
+        role: u.role 
+      })));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users", requireAdmin, async (req, res) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: "Invalid car data", details: result.error });
+        return res.status(400).json({ error: "Invalid user data", details: fromZodError(result.error) });
       }
-      const car = await storage.updateCar(id, result.data);
-      if (!car) {
-        return res.status(404).json({ error: "Car not found" });
-      }
-      res.json(car);
+      const user = await storage.createUser(result.data);
+      res.status(201).json({ 
+        id: user.id, 
+        username: user.username, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role 
+      });
     } catch (error) {
-      res.status(500).json({ error: "Failed to update car" });
+      res.status(500).json({ error: "Failed to create user" });
     }
   });
 
-  app.delete("/api/cars/:id", async (req, res) => {
+  // Vehicle routes
+  app.get("/api/vehicles", requireAuth, async (req, res) => {
+    try {
+      const vehicles = await storage.getAllVehicles();
+      res.json(vehicles);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vehicles" });
+    }
+  });
+
+  app.get("/api/vehicles/available", requireAuth, async (req, res) => {
+    try {
+      const vehicles = await storage.getAvailableVehicles();
+      res.json(vehicles);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch available vehicles" });
+    }
+  });
+
+  app.get("/api/vehicles/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteCar(id);
+      const vehicle = await storage.getVehicle(id);
+      if (!vehicle) {
+        return res.status(404).json({ error: "Vehicle not found" });
+      }
+      res.json(vehicle);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch vehicle" });
+    }
+  });
+
+  app.post("/api/vehicles", requireAdmin, async (req, res) => {
+    try {
+      const result = insertVehicleSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid vehicle data", details: fromZodError(result.error) });
+      }
+      const vehicle = await storage.createVehicle(result.data);
+      res.status(201).json(vehicle);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create vehicle" });
+    }
+  });
+
+  app.put("/api/vehicles/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertVehicleSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid vehicle data", details: fromZodError(result.error) });
+      }
+      const vehicle = await storage.updateVehicle(id, result.data);
+      if (!vehicle) {
+        return res.status(404).json({ error: "Vehicle not found" });
+      }
+      res.json(vehicle);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update vehicle" });
+    }
+  });
+
+  app.delete("/api/vehicles/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteVehicle(id);
       if (!success) {
-        return res.status(404).json({ error: "Car not found" });
+        return res.status(404).json({ error: "Vehicle not found" });
       }
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete car" });
+      res.status(500).json({ error: "Failed to delete vehicle" });
     }
   });
 
-  // Sales metrics routes
-  app.get("/api/sales-metrics", async (req, res) => {
+  // Driver routes
+  app.get("/api/drivers", requireAuth, async (req, res) => {
     try {
-      const metrics = await storage.getCurrentSalesMetrics();
-      res.json(metrics);
+      const drivers = await storage.getAllDrivers();
+      res.json(drivers);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch sales metrics" });
+      res.status(500).json({ error: "Failed to fetch drivers" });
     }
   });
 
-  app.post("/api/sales-metrics", async (req, res) => {
+  app.get("/api/drivers/available", requireAuth, async (req, res) => {
     try {
-      const result = insertSalesMetricsSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ error: "Invalid metrics data", details: result.error });
+      const drivers = await storage.getAvailableDrivers();
+      res.json(drivers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch available drivers" });
+    }
+  });
+
+  app.get("/api/drivers/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const driver = await storage.getDriver(id);
+      if (!driver) {
+        return res.status(404).json({ error: "Driver not found" });
       }
-      const metrics = await storage.createSalesMetrics(result.data);
-      res.status(201).json(metrics);
+      res.json(driver);
     } catch (error) {
-      res.status(500).json({ error: "Failed to create sales metrics" });
+      res.status(500).json({ error: "Failed to fetch driver" });
     }
   });
 
-  // Sales statistics routes
-  app.get("/api/sales-statistics", async (req, res) => {
+  app.post("/api/drivers", requireAdmin, async (req, res) => {
     try {
-      const statistics = await storage.getAllSalesStatistics();
-      res.json(statistics);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch sales statistics" });
-    }
-  });
-
-  app.post("/api/sales-statistics", async (req, res) => {
-    try {
-      const result = insertSalesStatisticsSchema.safeParse(req.body);
+      const result = insertDriverSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: "Invalid statistics data", details: result.error });
+        return res.status(400).json({ error: "Invalid driver data", details: fromZodError(result.error) });
       }
-      const statistics = await storage.createSalesStatistics(result.data);
-      res.status(201).json(statistics);
+      const driver = await storage.createDriver(result.data);
+      res.status(201).json(driver);
     } catch (error) {
-      res.status(500).json({ error: "Failed to create sales statistics" });
+      res.status(500).json({ error: "Failed to create driver" });
     }
   });
 
-  // User routes
-  app.get("/api/user", async (req, res) => {
+  app.put("/api/drivers/:id", requireAdmin, async (req, res) => {
     try {
-      // Return default admin user for demo
-      const user = await storage.getUserByUsername("admin");
-      res.json(user);
+      const id = parseInt(req.params.id);
+      const result = insertDriverSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid driver data", details: fromZodError(result.error) });
+      }
+      const driver = await storage.updateDriver(id, result.data);
+      if (!driver) {
+        return res.status(404).json({ error: "Driver not found" });
+      }
+      res.json(driver);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch user" });
+      res.status(500).json({ error: "Failed to update driver" });
+    }
+  });
+
+  app.delete("/api/drivers/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteDriver(id);
+      if (!success) {
+        return res.status(404).json({ error: "Driver not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete driver" });
+    }
+  });
+
+  // Vehicle assignment routes
+  app.get("/api/assignments", requireAuth, async (req, res) => {
+    try {
+      const assignments = req.query.active === 'true' 
+        ? await storage.getActiveAssignments()
+        : await storage.getVehicleAssignments();
+      res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch assignments" });
+    }
+  });
+
+  app.post("/api/assignments", requireAdmin, async (req, res) => {
+    try {
+      const result = insertVehicleAssignmentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid assignment data", details: fromZodError(result.error) });
+      }
+      const assignment = await storage.assignVehicleToDriver(result.data);
+      res.status(201).json(assignment);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create assignment" });
+    }
+  });
+
+  app.delete("/api/assignments/vehicle/:vehicleId", requireAdmin, async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const reason = req.body.reason || "Unassigned by admin";
+      const success = await storage.unassignVehicle(vehicleId, reason);
+      if (!success) {
+        return res.status(404).json({ error: "Assignment not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to unassign vehicle" });
+    }
+  });
+
+  // Maintenance records routes
+  app.get("/api/maintenance", requireAuth, async (req, res) => {
+    try {
+      const vehicleId = req.query.vehicleId ? parseInt(req.query.vehicleId as string) : undefined;
+      const records = await storage.getMaintenanceRecords(vehicleId);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch maintenance records" });
+    }
+  });
+
+  app.post("/api/maintenance", requireAuth, async (req, res) => {
+    try {
+      const result = insertMaintenanceRecordSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid maintenance data", details: fromZodError(result.error) });
+      }
+      const record = await storage.addMaintenanceRecord(result.data);
+      res.status(201).json(record);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create maintenance record" });
+    }
+  });
+
+  // Fuel records routes
+  app.get("/api/fuel", requireAuth, async (req, res) => {
+    try {
+      const vehicleId = req.query.vehicleId ? parseInt(req.query.vehicleId as string) : undefined;
+      const records = await storage.getFuelRecords(vehicleId);
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch fuel records" });
+    }
+  });
+
+  app.post("/api/fuel", requireAuth, async (req, res) => {
+    try {
+      const result = insertFuelRecordSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid fuel data", details: fromZodError(result.error) });
+      }
+      const record = await storage.addFuelRecord(result.data);
+      res.status(201).json(record);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create fuel record" });
     }
   });
 
