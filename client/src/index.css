@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 6%, 10%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(258, 90%, 66%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.75rem;
+
+  /* Custom FoCar Colors */
+  --dark-bg: hsl(240, 10%, 3.9%);
+  --dark-card: hsl(240, 6%, 10%);
+  --dark-elevated: hsl(240, 5%, 16%);
+  --purple-primary: hsl(258, 90%, 66%);
+  --purple-dark: hsl(258, 90%, 56%);
+  --trend-green: hsl(160, 84%, 39%);
+  --trend-yellow: hsl(43, 96%, 56%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 6%, 10%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(258, 90%, 66%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-color: var(--dark-bg);
+    color: var(--foreground);
+  }
+
+  html {
+    @apply dark;
+  }
+}
+
+@layer components {
+  .bg-dark-bg {
+    background-color: var(--dark-bg);
+  }
+
+  .bg-dark-card {
+    background-color: var(--dark-card);
+  }
+
+  .bg-dark-elevated {
+    background-color: var(--dark-elevated);
+  }
+
+  .bg-purple-primary {
+    background-color: var(--purple-primary);
+  }
+
+  .bg-purple-dark {
+    background-color: var(--purple-dark);
+  }
+
+  .bg-trend-green {
+    background-color: var(--trend-green);
+  }
+
+  .bg-trend-yellow {
+    background-color: var(--trend-yellow);
+  }
+
+  .text-purple-primary {
+    color: var(--purple-primary);
+  }
+
+  .text-trend-green {
+    color: var(--trend-green);
+  }
+
+  .text-trend-yellow {
+    color: var(--trend-yellow);
+  }
+
+  .border-dark-elevated {
+    border-color: var(--dark-elevated);
+  }
+
+  .hover\:bg-dark-elevated:hover {
+    background-color: var(--dark-elevated);
+  }
+
+  .focus\:ring-purple-primary:focus {
+    --tw-ring-color: var(--purple-primary);
+  }
+}
+
+/* Chart container styles */
+.chart-container {
+  position: relative;
+  height: 64px;
+  width: 100%;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 64px !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 1024px) {
+  .sidebar {
+    display: none;
+  }
+  
+  .main-content {
+    width: 100%;
+  }
+}
+
+/* Animation styles */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dark-elevated);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
