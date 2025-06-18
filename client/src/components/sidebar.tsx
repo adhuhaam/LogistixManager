@@ -1,32 +1,75 @@
-import { Link, useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
+import { Car, BarChart3, Users, CreditCard, MessageCircle, HelpCircle, Settings, UserCheck, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  Car, 
-  Users, 
-  CreditCard, 
-  Mail, 
-  HelpCircle, 
-  Settings 
-} from "lucide-react";
-
-const navigationItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/statistics", label: "Statistics", icon: BarChart3 },
-  { href: "/car-listings", label: "Car Listing", icon: Car },
-  { href: "/customers", label: "Customers", icon: Users },
-  { href: "/transactions", label: "Transactions", icon: CreditCard },
-  { href: "/messages", label: "Messages", icon: Mail, hasNotification: true },
-];
-
-const secondaryItems = [
-  { href: "/help", label: "Help Request", icon: HelpCircle },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 export default function Sidebar() {
   const [location] = useLocation();
+  const { user, isSuperAdmin, canManageVehicles, canManageDrivers, logout } = useAuth();
+
+  // Build navigation items based on user role
+  const getNavigationItems = () => {
+    const baseItems = [
+      { href: "/", label: "Dashboard", icon: BarChart3 },
+    ];
+
+    const roleBasedItems = [];
+
+    // All users can see car listings
+    roleBasedItems.push({ href: "/cars", label: "Car Listing", icon: Car });
+
+    // Super Admin and Admin can manage drivers
+    if (canManageDrivers()) {
+      roleBasedItems.push({ href: "/drivers", label: "Drivers", icon: UserCheck });
+    }
+
+    // Super Admin and Admin can see assignments
+    if (canManageVehicles()) {
+      roleBasedItems.push({ href: "/assignments", label: "Vehicle Assignments", icon: Truck });
+    }
+
+    // All users can see some level of customer data
+    roleBasedItems.push({ href: "/customers", label: "Customers", icon: Users });
+
+    return [...baseItems, ...roleBasedItems];
+  };
+
+  const getSecondaryItems = () => {
+    const items = [
+      { href: "/help", label: "Help Request", icon: HelpCircle },
+    ];
+
+    // Super Admin gets access to system settings
+    if (isSuperAdmin()) {
+      items.push({ href: "/settings", label: "Settings", icon: Settings });
+    }
+
+    return items;
+  };
+
+  const mainItems = getNavigationItems();
+  const secondaryItems = getSecondaryItems();
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'bg-red-500';
+      case 'admin': return 'bg-purple-primary';
+      case 'user': return 'bg-blue-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'Super Admin';
+      case 'admin': return 'Admin';
+      case 'user': return 'User';
+      default: return 'Unknown';
+    }
+  };
+
+  if (!user) return null;
 
   return (
     <aside className="w-64 bg-dark-card flex flex-col h-screen">
@@ -43,25 +86,20 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {navigationItems.map((item) => {
+          {mainItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location === item.href || (location === "/" && item.href === "/dashboard");
+            const isActive = location === item.href;
             
             return (
               <li key={item.href}>
                 <Link href={item.href} className={cn(
-                  "flex items-center justify-between px-4 py-3 rounded-xl transition-colors",
+                  "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
                   isActive
                     ? "bg-purple-primary text-white"
                     : "text-gray-400 hover:text-white hover:bg-dark-elevated"
                 )}>
-                  <div className="flex items-center space-x-3">
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.hasNotification && (
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  )}
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
                 </Link>
               </li>
             );
@@ -95,14 +133,26 @@ export default function Sidebar() {
       {/* User Profile */}
       <div className="p-4 border-t border-gray-800">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-purple-primary rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-white">DR</span>
+          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", getRoleColor(user.role))}>
+            <span className="text-sm font-medium text-white">
+              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </span>
           </div>
           <div className="flex-1">
-            <p className="font-medium text-sm text-white">Dianne Russell</p>
-            <p className="text-xs text-gray-400">Admin</p>
+            <p className="font-medium text-sm text-white">{user.name}</p>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {getRoleLabel(user.role)}
+              </Badge>
+            </div>
           </div>
         </div>
+        <button
+          onClick={logout}
+          className="mt-3 w-full text-xs text-gray-400 hover:text-white transition-colors text-left"
+        >
+          Sign out
+        </button>
       </div>
     </aside>
   );
