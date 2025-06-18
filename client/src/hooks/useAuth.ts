@@ -41,8 +41,8 @@ export function useAuth() {
     return roles.includes(user.role);
   };
 
-  const isSuperAdmin = () => user?.role === 'super_admin';
-  const isAdmin = () => user?.role === 'admin' || user?.role === 'super_admin';
+  const isSuperAdmin = user?.role === 'super_admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const canManageVehicles = () => hasPermission(['super_admin', 'admin']);
   const canManageDrivers = () => hasPermission(['super_admin', 'admin']);
   const canUpdateDetails = () => hasPermission(['super_admin', 'admin', 'user']);

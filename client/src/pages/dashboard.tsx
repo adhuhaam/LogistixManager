@@ -30,8 +30,8 @@ export default function Dashboard() {
   });
 
   const getDashboardTitle = () => {
-    if (isSuperAdmin()) return `Welcome back, ${user?.name} (Super Admin)`;
-    if (isAdmin()) return `Welcome back, ${user?.name} (Admin)`;
+    if (isSuperAdmin) return `Welcome back, ${user?.name} (Super Admin)`;
+    if (isAdmin) return `Welcome back, ${user?.name} (Admin)`;
     return `Welcome back, ${user?.name}`;
   };
 
@@ -272,7 +272,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Driver Statistics - Only for Admin and Super Admin */}
-        {(isAdmin() || isSuperAdmin()) && drivers && (
+        {(isAdmin || isSuperAdmin) && drivers && (
           <Card className="bg-dark-card border-gray-800">
             <CardHeader>
               <div className="flex items-center justify-between">

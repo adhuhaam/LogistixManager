@@ -41,7 +41,7 @@ export default function Sidebar() {
     ];
 
     // Super Admin gets access to system settings
-    if (isSuperAdmin()) {
+    if (isSuperAdmin) {
       items.push({ href: "/settings", label: "Settings", icon: Settings });
     }
 

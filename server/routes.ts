@@ -154,6 +154,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/users/:id", requireRole(['super_admin']), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const result = insertUserSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid user data", details: fromZodError(result.error) });
+      }
+      const user = await storage.updateUser(id, result.data);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role 
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireRole(['super_admin']), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const users = await storage.getAllUsers();
+      const userToDelete = users.find(u => u.id === id);
+      
+      if (!userToDelete) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Prevent deleting the last super admin
+      if (userToDelete.role === 'super_admin') {
+        const superAdmins = users.filter(u => u.role === 'super_admin');
+        if (superAdmins.length <= 1) {
+          return res.status(400).json({ error: "Cannot delete the last super admin" });
+        }
+      }
+      
+      // In a real implementation, you'd have a deleteUser method
+      // For now, we'll update the user to inactive status
+      await storage.updateUser(id, { role: 'inactive' });
+      res.json({ message: "User deactivated successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   // Vehicle routes
   app.get("/api/vehicles", requireAuth, async (req, res) => {
     try {
