@@ -8,6 +8,7 @@ import {
   insertVehicleAssignmentSchema,
   insertMaintenanceRecordSchema,
   insertFuelRecordSchema,
+  insertSystemSettingsSchema,
   loginSchema
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -27,6 +28,23 @@ const requireAuth = (req: any, res: any, next: any) => {
     return res.status(401).json({ message: "Authentication required" });
   }
   next();
+};
+
+// Role-based authorization middleware
+const requireRole = (allowedRoles: string[]) => {
+  return async (req: any, res: any, next: any) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    const user = await storage.getUser(req.session.userId);
+    if (!user || !allowedRoles.includes(user.role)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    
+    req.user = user;
+    next();
+  };
 };
 
 const requireAdmin = (req: any, res: any, next: any) => {

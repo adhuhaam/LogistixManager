@@ -343,6 +343,45 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return record;
   }
+
+  // System settings methods
+  async getSystemSettings(): Promise<SystemSettings[]> {
+    return await db
+      .select()
+      .from(systemSettings)
+      .orderBy(systemSettings.key);
+  }
+
+  async getSystemSetting(key: string): Promise<SystemSettings | undefined> {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.key, key));
+    return setting;
+  }
+
+  async updateSystemSetting(key: string, value: string, updatedBy: number): Promise<SystemSettings> {
+    const existing = await this.getSystemSetting(key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(systemSettings)
+        .set({ value, updatedBy, updatedAt: new Date() })
+        .where(eq(systemSettings.key, key))
+        .returning();
+      return updated;
+    } else {
+      return await this.createSystemSetting({ key, value, updatedBy });
+    }
+  }
+
+  async createSystemSetting(setting: InsertSystemSettings): Promise<SystemSettings> {
+    const [newSetting] = await db
+      .insert(systemSettings)
+      .values(setting)
+      .returning();
+    return newSetting;
+  }
 }
 
 export const storage = new DatabaseStorage();
