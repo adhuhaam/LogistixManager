@@ -22,6 +22,15 @@ declare module 'express-session' {
   }
 }
 
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
+
 // Simple session-based authentication middleware
 const requireAuth = (req: any, res: any, next: any) => {
   if (!req.session?.userId) {
@@ -190,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/vehicles/:id", requireAdmin, async (req, res) => {
+  app.put("/api/vehicles/:id", requireRole(['super_admin', 'admin', 'user']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const result = insertVehicleSchema.partial().safeParse(req.body);
@@ -207,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vehicles/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/vehicles/:id", requireRole(['super_admin']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteVehicle(id);
@@ -252,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/drivers", requireAdmin, async (req, res) => {
+  app.post("/api/drivers", requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
       const result = insertDriverSchema.safeParse(req.body);
       if (!result.success) {
@@ -265,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/drivers/:id", requireAdmin, async (req, res) => {
+  app.put("/api/drivers/:id", requireRole(['super_admin', 'admin', 'user']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const result = insertDriverSchema.partial().safeParse(req.body);
@@ -282,7 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/drivers/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/drivers/:id", requireRole(['super_admin']), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteDriver(id);
@@ -307,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/assignments", requireAdmin, async (req, res) => {
+  app.post("/api/assignments", requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
       const result = insertVehicleAssignmentSchema.safeParse(req.body);
       if (!result.success) {
@@ -320,7 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/assignments/vehicle/:vehicleId", requireAdmin, async (req, res) => {
+  app.delete("/api/assignments/vehicle/:vehicleId", requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
       const reason = req.body.reason || "Unassigned by admin";
@@ -410,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!value) {
         return res.status(400).json({ error: "Value is required" });
       }
-      const setting = await storage.updateSystemSetting(req.params.key, value, req.user.id);
+      const setting = await storage.updateSystemSetting(req.params.key, value, (req as any).user.id);
       res.json(setting);
     } catch (error) {
       res.status(500).json({ error: "Failed to update setting" });
