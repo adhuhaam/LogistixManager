@@ -5,7 +5,7 @@ interface User {
   username: string;
   name: string;
   email: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'user';
 }
 
 export function useAuth() {
@@ -33,12 +33,31 @@ export function useAuth() {
     queryClient.clear();
   };
 
+  // Role-based permission helpers
+  const hasPermission = (requiredRoles: string | string[]) => {
+    if (!user) return false;
+    
+    const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+    return roles.includes(user.role);
+  };
+
+  const isSuperAdmin = () => user?.role === 'super_admin';
+  const isAdmin = () => user?.role === 'admin' || user?.role === 'super_admin';
+  const canManageVehicles = () => hasPermission(['super_admin', 'admin']);
+  const canManageDrivers = () => hasPermission(['super_admin', 'admin']);
+  const canUpdateDetails = () => hasPermission(['super_admin', 'admin', 'user']);
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
     logout,
-    error
+    error,
+    hasPermission,
+    isSuperAdmin,
+    canManageVehicles,
+    canManageDrivers,
+    canUpdateDetails,
   };
 }

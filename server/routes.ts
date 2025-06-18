@@ -47,12 +47,7 @@ const requireRole = (allowedRoles: string[]) => {
   };
 };
 
-const requireAdmin = (req: any, res: any, next: any) => {
-  if (!req.session?.userId || req.session?.userRole !== "admin") {
-    return res.status(403).json({ message: "Admin access required" });
-  }
-  next();
-};
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session configuration
@@ -99,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/user", requireAuth, async (req, res) => {
     try {
-      const user = await storage.getUser(req.session.userId);
+      const user = await storage.getUser(req.session.userId!);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -115,8 +110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User management routes (admin only)
-  app.get("/api/users", requireAdmin, async (req, res) => {
+  // User management routes (super admin only)
+  app.get("/api/users", requireRole(['super_admin']), async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users.map(u => ({ 
@@ -131,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", requireAdmin, async (req, res) => {
+  app.post("/api/users", requireRole(['super_admin']), async (req, res) => {
     try {
       const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
@@ -182,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vehicles", requireAdmin, async (req, res) => {
+  app.post("/api/vehicles", requireRole(['super_admin', 'admin']), async (req, res) => {
     try {
       const result = insertVehicleSchema.safeParse(req.body);
       if (!result.success) {
@@ -384,6 +379,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(record);
     } catch (error) {
       res.status(500).json({ error: "Failed to create fuel record" });
+    }
+  });
+
+  // System settings routes (Super Admin only)
+  app.get("/api/settings", requireRole(['super_admin']), async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.get("/api/settings/:key", requireRole(['super_admin']), async (req, res) => {
+    try {
+      const setting = await storage.getSystemSetting(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ error: "Setting not found" });
+      }
+      res.json(setting);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch setting" });
+    }
+  });
+
+  app.put("/api/settings/:key", requireRole(['super_admin']), async (req, res) => {
+    try {
+      const { value } = req.body;
+      if (!value) {
+        return res.status(400).json({ error: "Value is required" });
+      }
+      const setting = await storage.updateSystemSetting(req.params.key, value, req.user.id);
+      res.json(setting);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update setting" });
     }
   });
 
