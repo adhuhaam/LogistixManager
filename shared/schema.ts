@@ -10,9 +10,19 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("user"), // "admin", "user"
+  role: text("role").notNull().default("user"), // "super_admin", "admin", "user"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// System settings table for configurable app settings
+export const systemSettings = pgTable("system_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: integer("updated_by").references(() => users.id),
 });
 
 // Drivers table for managing driver information
@@ -117,6 +127,14 @@ export const usersRelations = relations(users, ({ many }) => ({
   vehicles: many(vehicles),
   drivers: many(drivers),
   assignments: many(vehicleAssignments),
+  systemSettings: many(systemSettings),
+}));
+
+export const systemSettingsRelations = relations(systemSettings, ({ one }) => ({
+  updatedBy: one(users, {
+    fields: [systemSettings.updatedBy],
+    references: [users.id],
+  }),
 }));
 
 export const driversRelations = relations(drivers, ({ one, many }) => ({
@@ -165,6 +183,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export const insertDriverSchema = createInsertSchema(drivers).omit({
   id: true,
   createdAt: true,
@@ -202,6 +225,8 @@ export const loginSchema = z.object({
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SystemSettings = typeof systemSettings.$inferSelect;
+export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
 export type Driver = typeof drivers.$inferSelect;
 export type InsertDriver = z.infer<typeof insertDriverSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;

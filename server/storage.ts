@@ -5,6 +5,7 @@ import {
   vehicleAssignments, 
   maintenanceRecords, 
   fuelRecords,
+  systemSettings,
   type User, 
   type InsertUser, 
   type Vehicle, 
@@ -16,7 +17,9 @@ import {
   type MaintenanceRecord,
   type InsertMaintenanceRecord,
   type FuelRecord,
-  type InsertFuelRecord
+  type InsertFuelRecord,
+  type SystemSettings,
+  type InsertSystemSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -63,6 +66,12 @@ export interface IStorage {
   addFuelRecord(record: InsertFuelRecord): Promise<FuelRecord>;
   getFuelRecords(vehicleId?: number): Promise<FuelRecord[]>;
   updateFuelRecord(id: number, updates: Partial<InsertFuelRecord>): Promise<FuelRecord | undefined>;
+  
+  // System settings methods
+  getSystemSettings(): Promise<SystemSettings[]>;
+  getSystemSetting(key: string): Promise<SystemSettings | undefined>;
+  updateSystemSetting(key: string, value: string, updatedBy: number): Promise<SystemSettings>;
+  createSystemSetting(setting: InsertSystemSettings): Promise<SystemSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
