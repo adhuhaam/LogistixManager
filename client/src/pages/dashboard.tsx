@@ -1,5 +1,5 @@
 import Header from "@/components/header";
-import TrendChart from "@/components/trend-chart";
+import InteractiveChart from "@/components/interactive-chart";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -179,7 +179,7 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-400">Fleet efficiency this month</p>
                 </div>
                 <div className="chart-container">
-                  <TrendChart data={mockUtilizationData} color="#10B981" />
+                  <InteractiveChart data={mockUtilizationData} color="#10B981" label="Fleet Utilization" />
                 </div>
               </div>
             </CardContent>
@@ -206,7 +206,7 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-400">Average performance score</p>
                 </div>
                 <div className="chart-container">
-                  <TrendChart data={mockPerformanceData} color="#F59E0B" />
+                  <InteractiveChart data={mockPerformanceData} color="#F59E0B" label="Driver Performance" />
                 </div>
               </div>
             </CardContent>

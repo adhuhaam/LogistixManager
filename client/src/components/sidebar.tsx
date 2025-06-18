@@ -16,21 +16,13 @@ export default function Sidebar() {
 
     const roleBasedItems = [];
 
-    // All users can see car listings
-    roleBasedItems.push({ href: "/cars", label: "Car Listing", icon: Car });
+    // All users can see vehicle fleet
+    roleBasedItems.push({ href: "/car-listings", label: "Vehicle Fleet", icon: Car });
 
     // Super Admin and Admin can manage drivers
     if (canManageDrivers()) {
       roleBasedItems.push({ href: "/drivers", label: "Drivers", icon: UserCheck });
     }
-
-    // Super Admin and Admin can see assignments
-    if (canManageVehicles()) {
-      roleBasedItems.push({ href: "/assignments", label: "Vehicle Assignments", icon: Truck });
-    }
-
-    // All users can see some level of customer data
-    roleBasedItems.push({ href: "/customers", label: "Customers", icon: Users });
 
     return [...baseItems, ...roleBasedItems];
   };
