@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Edit, Car, Fuel, Calendar, Settings } from "lucide-react";
+import { Search, Plus, Edit, Car, Fuel, Calendar, Settings, Eye, MapPin, Shield, FileCheck, Truck } from "lucide-react";
 
 interface Vehicle {
   id: number;
@@ -47,6 +47,7 @@ export default function CarListings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
   const [newVehicle, setNewVehicle] = useState({
     make: '', model: '', year: new Date().getFullYear(), registrationNumber: '',
     chassisNumber: '', engineNumber: '', fuelType: 'hybrid', horsepower: 200,
@@ -346,8 +347,8 @@ export default function CarListings() {
           )}
         </div>
 
-        {/* Vehicle Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Vehicle Grid - 4 cards layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {filteredVehicles.map((vehicle) => (
             <Card key={vehicle.id} className="bg-dark-card border-gray-800 hover:border-purple-primary transition-colors">
               {/* Vehicle Image */}
@@ -363,22 +364,10 @@ export default function CarListings() {
               </div>
 
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-white text-lg">{vehicle.make} {vehicle.model}</CardTitle>
-                    <p className="text-gray-400 text-sm">{vehicle.year} • {vehicle.registrationNumber}</p>
-                    <p className="text-purple-primary text-xs font-medium uppercase">{vehicle.category}</p>
-                  </div>
-                  {canManageVehicles() && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingVehicle(vehicle)}
-                      className="text-gray-400 hover:text-white"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
+                <div>
+                  <CardTitle className="text-white text-lg">{vehicle.make} {vehicle.model}</CardTitle>
+                  <p className="text-gray-400 text-sm">{vehicle.year} • {vehicle.registrationNumber}</p>
+                  <p className="text-purple-primary text-xs font-medium uppercase">{vehicle.category}</p>
                 </div>
               </CardHeader>
               
@@ -390,44 +379,86 @@ export default function CarListings() {
                   <span className="text-gray-400 text-sm capitalize">{vehicle.fuelType}</span>
                 </div>
 
-                {/* Key Information */}
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Location:</span>
-                    <span className="text-gray-300">{vehicle.location}</span>
+                {/* Key Information with Icons */}
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-purple-primary" />
+                      <span className="text-gray-400">Location:</span>
+                    </div>
+                    <span className="text-gray-300 font-medium">{vehicle.location}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Mileage:</span>
-                    <span className="text-gray-300">{vehicle.mileage?.toLocaleString() || 0} mi</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Driver:</span>
-                    <span className="text-gray-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Truck className="w-4 h-4 text-blue-400" />
+                      <span className="text-gray-400">Driver:</span>
+                    </div>
+                    <span className={`text-sm font-medium ${vehicle.assignedDriverId ? 'text-green-400' : 'text-yellow-400'}`}>
                       {vehicle.assignedDriverId ? 'Assigned' : 'Available'}
                     </span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Fuel className="w-4 h-4 text-orange-400" />
+                      <span className="text-gray-400">Fuel:</span>
+                    </div>
+                    <span className="text-gray-300 font-medium capitalize">{vehicle.fuelType}</span>
+                  </div>
                 </div>
 
-                {/* Expiry Dates */}
-                <div className="pt-2 border-t border-gray-700 space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Roadworthy:</span>
+                {/* Expiry Dates with Icons */}
+                <div className="pt-3 border-t border-gray-700 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-3 h-3 text-green-400" />
+                      <span className="text-gray-400">Roadworthy:</span>
+                    </div>
                     <span className={`${new Date(vehicle.roadworthinessExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
                       {new Date(vehicle.roadworthinessExpiry).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Annual Fee:</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <FileCheck className="w-3 h-3 text-blue-400" />
+                      <span className="text-gray-400">Annual Fee:</span>
+                    </div>
                     <span className={`${new Date(vehicle.annualFeeExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
                       {new Date(vehicle.annualFeeExpiry).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Insurance:</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-3 h-3 text-yellow-400" />
+                      <span className="text-gray-400">Insurance:</span>
+                    </div>
                     <span className={`${new Date(vehicle.insuranceExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
                       {new Date(vehicle.insuranceExpiry).toLocaleDateString()}
                     </span>
                   </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-3 border-t border-gray-700 flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewingVehicle(vehicle)}
+                    className="flex-1 border-gray-700 text-gray-300 hover:bg-dark-elevated hover:text-white"
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    View
+                  </Button>
+                  {canManageVehicles() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingVehicle(vehicle)}
+                      className="flex-1 border-gray-700 text-gray-300 hover:bg-purple-primary hover:text-white hover:border-purple-primary"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -617,6 +648,157 @@ export default function CarListings() {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Vehicle Detail View Dialog */}
+      {viewingVehicle && (
+        <Dialog open={!!viewingVehicle} onOpenChange={() => setViewingVehicle(null)}>
+          <DialogContent className="bg-dark-card border-gray-800 max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-white text-xl">
+                {viewingVehicle.make} {viewingVehicle.model} ({viewingVehicle.year})
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Vehicle Image */}
+              <div className="w-full h-64 bg-gray-800 rounded-lg overflow-hidden">
+                <img 
+                  src={viewingVehicle.imageUrl || '/images/default-car.jpg'} 
+                  alt={`${viewingVehicle.make} ${viewingVehicle.model}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/default-car.jpg';
+                  }}
+                />
+              </div>
+
+              {/* Vehicle Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Basic Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Registration Number:</span>
+                      <span className="text-white font-medium">{viewingVehicle.registrationNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Category:</span>
+                      <span className="text-purple-primary font-medium uppercase">{viewingVehicle.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Status:</span>
+                      <Badge className={`${getStatusColor(viewingVehicle.status)} text-white`}>
+                        {viewingVehicle.status.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Color:</span>
+                      <span className="text-white">{viewingVehicle.color}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Fuel Type:</span>
+                      <span className="text-white capitalize">{viewingVehicle.fuelType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Horsepower:</span>
+                      <span className="text-white">{viewingVehicle.horsepower} HP</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Seats:</span>
+                      <span className="text-white">{viewingVehicle.seats}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Mileage:</span>
+                      <span className="text-white">{viewingVehicle.mileage?.toLocaleString() || 0} mi</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location & Assignment */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Assignment & Location</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Current Location:</span>
+                      <span className="text-white font-medium">{viewingVehicle.location}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Driver Status:</span>
+                      <span className={`font-medium ${viewingVehicle.assignedDriverId ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {viewingVehicle.assignedDriverId ? 'Assigned' : 'Available'}
+                      </span>
+                    </div>
+                    {viewingVehicle.assignedDriverId && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Driver ID:</span>
+                        <span className="text-white">#{viewingVehicle.assignedDriverId}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Compliance & Expiry Dates */}
+                <div className="space-y-4 md:col-span-2">
+                  <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Compliance & Expiry Dates</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-dark-elevated p-4 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Shield className="w-5 h-5 text-green-400" />
+                        <span className="text-gray-300 font-medium">Roadworthiness</span>
+                      </div>
+                      <p className={`text-sm ${new Date(viewingVehicle.roadworthinessExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
+                        Expires: {new Date(viewingVehicle.roadworthinessExpiry).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="bg-dark-elevated p-4 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <FileCheck className="w-5 h-5 text-blue-400" />
+                        <span className="text-gray-300 font-medium">Annual Fee</span>
+                      </div>
+                      <p className={`text-sm ${new Date(viewingVehicle.annualFeeExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
+                        Expires: {new Date(viewingVehicle.annualFeeExpiry).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="bg-dark-elevated p-4 rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Calendar className="w-5 h-5 text-yellow-400" />
+                        <span className="text-gray-300 font-medium">Insurance</span>
+                      </div>
+                      <p className={`text-sm ${new Date(viewingVehicle.insuranceExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
+                        Expires: {new Date(viewingVehicle.insuranceExpiry).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end space-x-2 pt-4 border-t border-gray-700">
+                {canManageVehicles() && (
+                  <Button
+                    onClick={() => {
+                      setViewingVehicle(null);
+                      setEditingVehicle(viewingVehicle);
+                    }}
+                    className="bg-purple-primary hover:bg-purple-dark"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Vehicle
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => setViewingVehicle(null)}
+                  className="border-gray-700 text-gray-300"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}
