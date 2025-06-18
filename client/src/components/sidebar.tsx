@@ -68,10 +68,10 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-primary to-blue-500 rounded-lg flex items-center justify-center">
-            <Car className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+            <img src="/assets/ssss_1750216549833.png" alt="Logistics" className="w-8 h-8 object-contain" />
           </div>
-          <span className="text-xl font-bold text-white">FoCar</span>
+          <span className="text-xl font-bold text-white">Logistics</span>
         </div>
       </div>
 

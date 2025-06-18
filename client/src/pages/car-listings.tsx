@@ -25,6 +25,19 @@ interface Vehicle {
   status: string;
   mileage: number;
   assignedDriverId?: number;
+  category: string;
+  roadworthinessExpiry: string;
+  annualFeeExpiry: string;
+  insuranceExpiry: string;
+  location: string;
+  imageUrl: string;
+}
+
+interface Driver {
+  id: number;
+  name: string;
+  email: string;
+  status: string;
 }
 
 export default function CarListings() {
@@ -41,7 +54,9 @@ export default function CarListings() {
     registrationDate: new Date().toISOString().split('T')[0],
     registrationExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
     insuranceNumber: '', insuranceExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
-    mileage: 0
+    mileage: 0, category: 'sedan', location: 'Main Depot',
+    roadworthinessExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+    annualFeeExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
   });
 
   const { data: vehicles, isLoading } = useQuery<Vehicle[]>({
@@ -49,6 +64,15 @@ export default function CarListings() {
     queryFn: async () => {
       const response = await fetch('/api/vehicles');
       if (!response.ok) throw new Error('Failed to fetch vehicles');
+      return response.json();
+    },
+  });
+
+  const { data: drivers } = useQuery<Driver[]>({
+    queryKey: ['/api/drivers'],
+    queryFn: async () => {
+      const response = await fetch('/api/drivers');
+      if (!response.ok) throw new Error('Failed to fetch drivers');
       return response.json();
     },
   });
@@ -73,7 +97,9 @@ export default function CarListings() {
         registrationDate: new Date().toISOString().split('T')[0],
         registrationExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
         insuranceNumber: '', insuranceExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
-        mileage: 0
+        mileage: 0, category: 'sedan', location: 'Main Depot',
+        roadworthinessExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+        annualFeeExpiry: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
       });
       toast({ title: "Vehicle added successfully" });
     },
@@ -215,6 +241,22 @@ export default function CarListings() {
                       />
                     </div>
                     <div>
+                      <Label className="text-gray-300">Category</Label>
+                      <Select value={newVehicle.category} onValueChange={(value) => setNewVehicle({ ...newVehicle, category: value })}>
+                        <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-dark-elevated border-gray-700">
+                          <SelectItem value="sedan">Sedan</SelectItem>
+                          <SelectItem value="suv">SUV</SelectItem>
+                          <SelectItem value="truck">Truck</SelectItem>
+                          <SelectItem value="van">Van</SelectItem>
+                          <SelectItem value="coupe">Coupe</SelectItem>
+                          <SelectItem value="hatchback">Hatchback</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
                       <Label className="text-gray-300">Fuel Type</Label>
                       <Select value={newVehicle.fuelType} onValueChange={(value) => setNewVehicle({ ...newVehicle, fuelType: value })}>
                         <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
@@ -237,6 +279,63 @@ export default function CarListings() {
                         required
                       />
                     </div>
+                    <div>
+                      <Label className="text-gray-300">Location</Label>
+                      <Input
+                        value={newVehicle.location}
+                        onChange={(e) => setNewVehicle({ ...newVehicle, location: e.target.value })}
+                        className="bg-dark-elevated border-gray-700 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Vehicle Image URL</Label>
+                      <Input
+                        value={newVehicle.imageUrl}
+                        onChange={(e) => setNewVehicle({ ...newVehicle, imageUrl: e.target.value })}
+                        className="bg-dark-elevated border-gray-700 text-white"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Insurance Number</Label>
+                      <Input
+                        value={newVehicle.insuranceNumber}
+                        onChange={(e) => setNewVehicle({ ...newVehicle, insuranceNumber: e.target.value })}
+                        className="bg-dark-elevated border-gray-700 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Insurance Expiry</Label>
+                      <Input
+                        type="date"
+                        value={newVehicle.insuranceExpiry}
+                        onChange={(e) => setNewVehicle({ ...newVehicle, insuranceExpiry: e.target.value })}
+                        className="bg-dark-elevated border-gray-700 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Roadworthiness Expiry</Label>
+                      <Input
+                        type="date"
+                        value={newVehicle.roadworthinessExpiry}
+                        onChange={(e) => setNewVehicle({ ...newVehicle, roadworthinessExpiry: e.target.value })}
+                        className="bg-dark-elevated border-gray-700 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-300">Annual Fee Expiry</Label>
+                      <Input
+                        type="date"
+                        value={newVehicle.annualFeeExpiry}
+                        onChange={(e) => setNewVehicle({ ...newVehicle, annualFeeExpiry: e.target.value })}
+                        className="bg-dark-elevated border-gray-700 text-white"
+                        required
+                      />
+                    </div>
                   </div>
                   <Button type="submit" className="w-full bg-purple-primary hover:bg-purple-dark">
                     Add Vehicle
@@ -251,16 +350,24 @@ export default function CarListings() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVehicles.map((vehicle) => (
             <Card key={vehicle.id} className="bg-dark-card border-gray-800 hover:border-purple-primary transition-colors">
+              {/* Vehicle Image */}
+              <div className="h-48 bg-gray-800 rounded-t-lg overflow-hidden">
+                <img 
+                  src={vehicle.imageUrl || '/images/default-car.jpg'} 
+                  alt={`${vehicle.make} ${vehicle.model}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/default-car.jpg';
+                  }}
+                />
+              </div>
+
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-purple-primary rounded-lg flex items-center justify-center">
-                      <Car className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-white text-lg">{vehicle.make} {vehicle.model}</CardTitle>
-                      <p className="text-gray-400 text-sm">{vehicle.year} • {vehicle.registrationNumber}</p>
-                    </div>
+                  <div>
+                    <CardTitle className="text-white text-lg">{vehicle.make} {vehicle.model}</CardTitle>
+                    <p className="text-gray-400 text-sm">{vehicle.year} • {vehicle.registrationNumber}</p>
+                    <p className="text-purple-primary text-xs font-medium uppercase">{vehicle.category}</p>
                   </div>
                   {canManageVehicles() && (
                     <Button
@@ -274,6 +381,7 @@ export default function CarListings() {
                   )}
                 </div>
               </CardHeader>
+              
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Badge className={`${getStatusColor(vehicle.status)} text-white`}>
@@ -281,27 +389,45 @@ export default function CarListings() {
                   </Badge>
                   <span className="text-gray-400 text-sm capitalize">{vehicle.fuelType}</span>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Fuel className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-300">{vehicle.horsepower} HP</span>
+
+                {/* Key Information */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Location:</span>
+                    <span className="text-gray-300">{vehicle.location}</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Settings className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-300">{vehicle.seats} Seats</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Mileage:</span>
+                    <span className="text-gray-300">{vehicle.mileage?.toLocaleString() || 0} mi</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-300">{vehicle.mileage.toLocaleString()} mi</span>
-                  </div>
-                  <div className="text-gray-300">
-                    {vehicle.assignedDriverId ? 'Assigned' : 'Available'}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Driver:</span>
+                    <span className="text-gray-300">
+                      {vehicle.assignedDriverId ? 'Assigned' : 'Available'}
+                    </span>
                   </div>
                 </div>
-                
-                <div className="pt-2 border-t border-gray-700">
-                  <p className="text-xs text-gray-400">Color: {vehicle.color}</p>
+
+                {/* Expiry Dates */}
+                <div className="pt-2 border-t border-gray-700 space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Roadworthy:</span>
+                    <span className={`${new Date(vehicle.roadworthinessExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
+                      {new Date(vehicle.roadworthinessExpiry).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Annual Fee:</span>
+                    <span className={`${new Date(vehicle.annualFeeExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
+                      {new Date(vehicle.annualFeeExpiry).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Insurance:</span>
+                    <span className={`${new Date(vehicle.insuranceExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-400' : 'text-gray-300'}`}>
+                      {new Date(vehicle.insuranceExpiry).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -328,11 +454,11 @@ export default function CarListings() {
       {/* Edit Vehicle Dialog */}
       {editingVehicle && (
         <Dialog open={!!editingVehicle} onOpenChange={() => setEditingVehicle(null)}>
-          <DialogContent className="bg-dark-card border-gray-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-dark-card border-gray-800 max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-white">Edit Vehicle</DialogTitle>
+              <DialogTitle className="text-white">Edit Vehicle - {editingVehicle.make} {editingVehicle.model}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleUpdateVehicle} className="space-y-4">
+            <form onSubmit={handleUpdateVehicle} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-300">Make</Label>
@@ -351,6 +477,30 @@ export default function CarListings() {
                   />
                 </div>
                 <div>
+                  <Label className="text-gray-300">Registration Number</Label>
+                  <Input
+                    value={editingVehicle.registrationNumber}
+                    onChange={(e) => setEditingVehicle({ ...editingVehicle, registrationNumber: e.target.value })}
+                    className="bg-dark-elevated border-gray-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-300">Category</Label>
+                  <Select value={editingVehicle.category} onValueChange={(value) => setEditingVehicle({ ...editingVehicle, category: value })}>
+                    <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-dark-elevated border-gray-700">
+                      <SelectItem value="sedan">Sedan</SelectItem>
+                      <SelectItem value="suv">SUV</SelectItem>
+                      <SelectItem value="truck">Truck</SelectItem>
+                      <SelectItem value="van">Van</SelectItem>
+                      <SelectItem value="coupe">Coupe</SelectItem>
+                      <SelectItem value="hatchback">Hatchback</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label className="text-gray-300">Status</Label>
                   <Select value={editingVehicle.status} onValueChange={(value) => setEditingVehicle({ ...editingVehicle, status: value })}>
                     <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
@@ -364,6 +514,37 @@ export default function CarListings() {
                   </Select>
                 </div>
                 <div>
+                  <Label className="text-gray-300">Assign Driver</Label>
+                  <Select 
+                    value={editingVehicle.assignedDriverId?.toString() || ''} 
+                    onValueChange={(value) => setEditingVehicle({ 
+                      ...editingVehicle, 
+                      assignedDriverId: value ? parseInt(value) : undefined,
+                      status: value ? 'assigned' : 'available'
+                    })}
+                  >
+                    <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
+                      <SelectValue placeholder="Select a driver" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-dark-elevated border-gray-700">
+                      <SelectItem value="">No Driver</SelectItem>
+                      {drivers?.filter(driver => driver.status === 'active').map((driver) => (
+                        <SelectItem key={driver.id} value={driver.id.toString()}>
+                          {driver.name} ({driver.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-gray-300">Location</Label>
+                  <Input
+                    value={editingVehicle.location}
+                    onChange={(e) => setEditingVehicle({ ...editingVehicle, location: e.target.value })}
+                    className="bg-dark-elevated border-gray-700 text-white"
+                  />
+                </div>
+                <div>
                   <Label className="text-gray-300">Mileage</Label>
                   <Input
                     type="number"
@@ -372,7 +553,61 @@ export default function CarListings() {
                     className="bg-dark-elevated border-gray-700 text-white"
                   />
                 </div>
+                <div>
+                  <Label className="text-gray-300">Vehicle Image URL</Label>
+                  <Input
+                    value={editingVehicle.imageUrl}
+                    onChange={(e) => setEditingVehicle({ ...editingVehicle, imageUrl: e.target.value })}
+                    className="bg-dark-elevated border-gray-700 text-white"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-300">Roadworthiness Expiry</Label>
+                  <Input
+                    type="date"
+                    value={editingVehicle.roadworthinessExpiry?.split('T')[0]}
+                    onChange={(e) => setEditingVehicle({ ...editingVehicle, roadworthinessExpiry: e.target.value })}
+                    className="bg-dark-elevated border-gray-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-300">Annual Fee Expiry</Label>
+                  <Input
+                    type="date"
+                    value={editingVehicle.annualFeeExpiry?.split('T')[0]}
+                    onChange={(e) => setEditingVehicle({ ...editingVehicle, annualFeeExpiry: e.target.value })}
+                    className="bg-dark-elevated border-gray-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-gray-300">Insurance Expiry</Label>
+                  <Input
+                    type="date"
+                    value={editingVehicle.insuranceExpiry?.split('T')[0]}
+                    onChange={(e) => setEditingVehicle({ ...editingVehicle, insuranceExpiry: e.target.value })}
+                    className="bg-dark-elevated border-gray-700 text-white"
+                  />
+                </div>
               </div>
+              
+              {/* Image Preview */}
+              {editingVehicle.imageUrl && (
+                <div>
+                  <Label className="text-gray-300">Image Preview</Label>
+                  <div className="mt-2 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden">
+                    <img 
+                      src={editingVehicle.imageUrl} 
+                      alt="Vehicle preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex space-x-2">
                 <Button type="submit" className="flex-1 bg-purple-primary hover:bg-purple-dark">
                   Update Vehicle
