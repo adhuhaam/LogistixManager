@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeContext, useThemeProvider } from "@/hooks/useTheme";
 import Sidebar from "@/components/sidebar";
 import MobileNav from "@/components/mobile-nav";
 import Dashboard from "@/pages/dashboard";
@@ -58,14 +59,18 @@ function Router() {
 }
 
 function App() {
+  const themeProps = useThemeProvider();
+
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="dark">
-          <Toaster />
-          <Router />
-        </div>
-      </TooltipProvider>
+      <ThemeContext.Provider value={themeProps}>
+        <TooltipProvider>
+          <div className={themeProps.theme}>
+            <Toaster />
+            <Router />
+          </div>
+        </TooltipProvider>
+      </ThemeContext.Provider>
     </QueryClientProvider>
   );
 }

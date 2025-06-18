@@ -34,6 +34,37 @@
   --trend-yellow: hsl(43, 96%, 56%);
 }
 
+.light {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(222, 84%, 5%);
+  --muted: hsl(210, 40%, 95%);
+  --muted-foreground: hsl(215, 16%, 47%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222, 84%, 5%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222, 84%, 5%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --primary: hsl(258, 90%, 66%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(210, 40%, 95%);
+  --secondary-foreground: hsl(222, 84%, 5%);
+  --accent: hsl(210, 40%, 95%);
+  --accent-foreground: hsl(222, 84%, 5%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(222, 84%, 5%);
+
+  /* Custom Light Theme Colors */
+  --dark-bg: hsl(0, 0%, 98%);
+  --dark-card: hsl(0, 0%, 100%);
+  --dark-elevated: hsl(210, 40%, 95%);
+  --purple-primary: hsl(258, 90%, 66%);
+  --purple-dark: hsl(258, 90%, 56%);
+  --trend-green: hsl(160, 84%, 39%);
+  --trend-yellow: hsl(43, 96%, 56%);
+}
+
 .dark {
   --background: hsl(240, 10%, 3.9%);
   --foreground: hsl(0, 0%, 98%);

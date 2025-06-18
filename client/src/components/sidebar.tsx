@@ -1,12 +1,15 @@
 import { useLocation, Link } from "wouter";
-import { Car, BarChart3, Users, CreditCard, MessageCircle, HelpCircle, Settings, UserCheck, Truck } from "lucide-react";
+import { Car, BarChart3, Users, CreditCard, MessageCircle, HelpCircle, Settings, UserCheck, Truck, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user, isSuperAdmin, canManageVehicles, canManageDrivers, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Build navigation items based on user role
   const getNavigationItems = () => {
@@ -139,12 +142,26 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
-        <button
-          onClick={logout}
-          className="mt-3 w-full text-xs text-gray-400 hover:text-white transition-colors text-left"
-        >
-          Sign out
-        </button>
+        
+        {/* Theme Toggle and Logout */}
+        <div className="mt-3 flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            className="p-2 text-gray-400 hover:text-white hover:bg-dark-elevated"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="p-2 text-gray-400 hover:text-white hover:bg-dark-elevated"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </aside>
   );
