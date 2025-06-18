@@ -33,6 +33,9 @@ export const drivers = pgTable("drivers", {
   phone: text("phone").notNull(),
   licenseNumber: text("license_number").notNull().unique(),
   licenseExpiryDate: date("license_expiry_date").notNull(),
+  employeeNumber: text("employee_number").notNull().unique(),
+  photoUrl: text("photo_url"),
+  licenseImageUrl: text("license_image_url"),
   medicalCertificateNumber: text("medical_certificate_number"),
   medicalCertificateExpiry: date("medical_certificate_expiry"),
   permits: text("permits").array().default([]), // Array of permit types

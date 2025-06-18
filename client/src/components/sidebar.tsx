@@ -116,31 +116,9 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {mainItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
-            
-            return (
-              <li key={item.href}>
-                <Link href={item.href} className={cn(
-                  "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
-                  isActive
-                    ? "bg-purple-primary text-white"
-                    : "text-gray-400 hover:text-white hover:bg-dark-elevated"
-                )}>
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="mt-8 pt-8 border-t border-gray-800">
+        <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            {secondaryItems.map((item) => {
+            {mainItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
               
@@ -149,8 +127,8 @@ export default function Sidebar() {
                   <Link href={item.href} className={cn(
                     "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
                     isActive
-                      ? "bg-purple-primary text-white"
-                      : "text-gray-400 hover:text-white hover:bg-dark-elevated"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}>
                     <Icon className="w-5 h-5" />
                     <span>{item.label}</span>
@@ -159,48 +137,70 @@ export default function Sidebar() {
               );
             })}
           </ul>
-        </div>
-      </nav>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center space-x-3">
-          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", getRoleColor(user.role))}>
-            <span className="text-sm font-medium text-white">
-              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-            </span>
+          <div className="mt-8 pt-8 border-t border-border">
+            <ul className="space-y-2">
+              {secondaryItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location === item.href;
+                
+                return (
+                  <li key={item.href}>
+                    <Link href={item.href} className={cn(
+                      "flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}>
+                      <Icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-          <div className="flex-1">
-            <p className="font-medium text-sm text-white">{user.name}</p>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {getRoleLabel(user.role)}
-              </Badge>
+        </nav>
+
+        {/* User Profile */}
+        <div className="p-4 border-t border-border">
+          <div className="flex items-center space-x-3">
+            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", getRoleColor(user.role))}>
+              <span className="text-sm font-medium text-primary-foreground">
+                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm text-foreground">{user.name}</p>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {getRoleLabel(user.role)}
+                </Badge>
+              </div>
             </div>
           </div>
+          
+          {/* Theme Toggle and Logout */}
+          <div className="mt-3 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-        
-        {/* Theme Toggle and Logout */}
-        <div className="mt-3 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            className="p-2 text-gray-400 hover:text-white hover:bg-dark-elevated"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={logout}
-            className="p-2 text-gray-400 hover:text-white hover:bg-dark-elevated"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }

@@ -19,6 +19,9 @@ interface Driver {
   phone: string;
   licenseNumber: string;
   licenseExpiryDate: string;
+  employeeNumber: string;
+  photoUrl?: string;
+  licenseImageUrl?: string;
   experience: number;
   status: string;
 }
