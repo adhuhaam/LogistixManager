@@ -17,7 +17,7 @@ import NotFound from "@/pages/not-found";
 
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-dark-bg">
+    <div className="flex h-screen bg-background text-foreground">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <MobileNav />
