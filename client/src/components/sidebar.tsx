@@ -1,15 +1,26 @@
 import { useLocation, Link } from "wouter";
-import { Car, BarChart3, Users, CreditCard, MessageCircle, HelpCircle, Settings, UserCheck, Truck, Sun, Moon, LogOut } from "lucide-react";
+import { Car, BarChart3, Users, CreditCard, MessageCircle, HelpCircle, Settings, UserCheck, Truck, Sun, Moon, LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user, isSuperAdmin, canManageVehicles, canManageDrivers, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setIsOpen(false);
+    }
+  }, [location, isMobile]);
 
   // Build navigation items based on user role
   const getNavigationItems = () => {
@@ -67,18 +78,44 @@ export default function Sidebar() {
   if (!user) return null;
 
   return (
-    <aside className="w-64 bg-dark-card flex flex-col h-screen">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <img src="/assets/ssss_1750216549833.png" alt="Logistics" className="w-8 h-8 object-contain" />
-          </div>
-          <span className="text-xl font-bold text-white">Logistics</span>
-        </div>
-      </div>
+    <>
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsOpen(!isOpen)}
+          className="fixed top-4 left-4 z-50 p-2 bg-card border border-border shadow-lg"
+        >
+          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </Button>
+      )}
 
-      {/* Navigation */}
+      {/* Sidebar Overlay for Mobile */}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        "w-64 bg-card border-r border-border flex flex-col h-screen transition-transform duration-300 z-50",
+        isMobile ? "fixed inset-y-0 left-0" : "relative",
+        isMobile && !isOpen ? "-translate-x-full" : "translate-x-0"
+      )}>
+        {/* Logo */}
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+              <img src="/attached_assets/ssss_1750216549833.png" alt="Logistics" className="w-8 h-8 object-contain" />
+            </div>
+            <span className="text-xl font-bold text-foreground">Logistic Manager</span>
+          </div>
+        </div>
+
+        {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {mainItems.map((item) => {
@@ -164,5 +201,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

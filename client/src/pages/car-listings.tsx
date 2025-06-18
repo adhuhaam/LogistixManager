@@ -485,43 +485,43 @@ export default function CarListings() {
       {/* Edit Vehicle Dialog */}
       {editingVehicle && (
         <Dialog open={!!editingVehicle} onOpenChange={() => setEditingVehicle(null)}>
-          <DialogContent className="bg-dark-card border-gray-800 max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-card border-border max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-white">Edit Vehicle - {editingVehicle.make} {editingVehicle.model}</DialogTitle>
+              <DialogTitle className="text-foreground">Edit Vehicle - {editingVehicle.make} {editingVehicle.model}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdateVehicle} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-300">Make</Label>
+                  <Label className="text-muted-foreground">Make</Label>
                   <Input
                     value={editingVehicle.make}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, make: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Model</Label>
+                  <Label className="text-muted-foreground">Model</Label>
                   <Input
                     value={editingVehicle.model}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, model: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Registration Number</Label>
+                  <Label className="text-muted-foreground">Registration Number</Label>
                   <Input
                     value={editingVehicle.registrationNumber}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, registrationNumber: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Category</Label>
+                  <Label className="text-muted-foreground">Category</Label>
                   <Select value={editingVehicle.category} onValueChange={(value) => setEditingVehicle({ ...editingVehicle, category: value })}>
-                    <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
+                    <SelectTrigger className="bg-background border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-dark-elevated border-gray-700">
+                    <SelectContent className="bg-popover border-border">
                       <SelectItem value="sedan">Sedan</SelectItem>
                       <SelectItem value="suv">SUV</SelectItem>
                       <SelectItem value="truck">Truck</SelectItem>
@@ -532,12 +532,12 @@ export default function CarListings() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-gray-300">Status</Label>
+                  <Label className="text-muted-foreground">Status</Label>
                   <Select value={editingVehicle.status} onValueChange={(value) => setEditingVehicle({ ...editingVehicle, status: value })}>
-                    <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
+                    <SelectTrigger className="bg-background border-border text-foreground">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-dark-elevated border-gray-700">
+                    <SelectContent className="bg-popover border-border">
                       <SelectItem value="available">Available</SelectItem>
                       <SelectItem value="assigned">Assigned</SelectItem>
                       <SelectItem value="maintenance">Maintenance</SelectItem>
@@ -545,7 +545,7 @@ export default function CarListings() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-gray-300">Assign Driver</Label>
+                  <Label className="text-muted-foreground">Assign Driver</Label>
                   <Select 
                     value={editingVehicle.assignedDriverId?.toString() || ''} 
                     onValueChange={(value) => setEditingVehicle({ 
@@ -554,10 +554,10 @@ export default function CarListings() {
                       status: value ? 'assigned' : 'available'
                     })}
                   >
-                    <SelectTrigger className="bg-dark-elevated border-gray-700 text-white">
+                    <SelectTrigger className="bg-background border-border text-foreground">
                       <SelectValue placeholder="Select a driver" />
                     </SelectTrigger>
-                    <SelectContent className="bg-dark-elevated border-gray-700">
+                    <SelectContent className="bg-popover border-border">
                       <SelectItem value="">No Driver</SelectItem>
                       {drivers?.filter(driver => driver.status === 'active').map((driver) => (
                         <SelectItem key={driver.id} value={driver.id.toString()}>
@@ -568,56 +568,56 @@ export default function CarListings() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-gray-300">Location</Label>
+                  <Label className="text-muted-foreground">Location</Label>
                   <Input
                     value={editingVehicle.location}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, location: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Mileage</Label>
+                  <Label className="text-muted-foreground">Mileage</Label>
                   <Input
                     type="number"
                     value={editingVehicle.mileage}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, mileage: parseInt(e.target.value) })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Vehicle Image URL</Label>
+                  <Label className="text-muted-foreground">Vehicle Image URL</Label>
                   <Input
                     value={editingVehicle.imageUrl}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, imageUrl: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                     placeholder="https://example.com/image.jpg"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Roadworthiness Expiry</Label>
+                  <Label className="text-muted-foreground">Roadworthiness Expiry</Label>
                   <Input
                     type="date"
                     value={editingVehicle.roadworthinessExpiry?.split('T')[0]}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, roadworthinessExpiry: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Annual Fee Expiry</Label>
+                  <Label className="text-muted-foreground">Annual Fee Expiry</Label>
                   <Input
                     type="date"
                     value={editingVehicle.annualFeeExpiry?.split('T')[0]}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, annualFeeExpiry: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-300">Insurance Expiry</Label>
+                  <Label className="text-muted-foreground">Insurance Expiry</Label>
                   <Input
                     type="date"
                     value={editingVehicle.insuranceExpiry?.split('T')[0]}
                     onChange={(e) => setEditingVehicle({ ...editingVehicle, insuranceExpiry: e.target.value })}
-                    className="bg-dark-elevated border-gray-700 text-white"
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
               </div>
