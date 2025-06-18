@@ -26,7 +26,7 @@ export default function Dashboard() {
       if (!response.ok) return [];
       return response.json();
     },
-    enabled: isAdmin || isSuperAdmin(),
+    enabled: isAdmin || isSuperAdmin,
   });
 
   const getDashboardTitle = () => {

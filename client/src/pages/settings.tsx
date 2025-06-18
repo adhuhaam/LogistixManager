@@ -41,7 +41,7 @@ export default function SettingsPage() {
       if (!response.ok) throw new Error('Failed to fetch settings');
       return response.json();
     },
-    enabled: isSuperAdmin(),
+    enabled: isSuperAdmin,
   });
 
   // Fetch users
@@ -52,7 +52,7 @@ export default function SettingsPage() {
       if (!response.ok) throw new Error('Failed to fetch users');
       return response.json();
     },
-    enabled: isSuperAdmin(),
+    enabled: isSuperAdmin,
   });
 
   // Update setting mutation
@@ -148,7 +148,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!isSuperAdmin()) {
+  if (!isSuperAdmin) {
     return (
       <div className="flex-1 bg-dark-bg">
         <Header title="Access Denied" subtitle="Super Admin access required" />
