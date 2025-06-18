@@ -9,6 +9,7 @@ import MobileNav from "@/components/mobile-nav";
 import Dashboard from "@/pages/dashboard";
 import CarListings from "@/pages/car-listings";
 import CarDetail from "@/pages/car-detail";
+import DriversPage from "@/pages/drivers";
 import SettingsPage from "@/pages/settings";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
@@ -46,8 +47,9 @@ function Router() {
     <AuthenticatedLayout>
       <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/cars" component={CarListings} />
+        <Route path="/car-listings" component={CarListings} />
         <Route path="/cars/:id" component={CarDetail} />
+        <Route path="/drivers" component={DriversPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>
