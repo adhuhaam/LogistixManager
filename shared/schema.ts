@@ -70,10 +70,14 @@ export const vehicles = pgTable("vehicles", {
   lastServiceDate: date("last_service_date"),
   nextServiceDue: date("next_service_due"),
   mileage: integer("mileage").default(0),
+  // Additional required fields
+  category: text("category").notNull().default("sedan"), // sedan, suv, truck, van, etc.
+  roadworthinessExpiry: date("roadworthiness_expiry").default("2025-12-31"),
+  annualFeeExpiry: date("annual_fee_expiry").default("2025-12-31"),
   // Assignment and status
   assignedDriverId: integer("assigned_driver_id").references(() => drivers.id),
   status: text("status").notNull().default("available"), // "available", "assigned", "maintenance", "retired"
-  location: text("location"),
+  location: text("location").notNull().default("Main Depot"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
